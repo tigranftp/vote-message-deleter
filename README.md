@@ -62,7 +62,8 @@ process started cannot be reconstructed accurately.
 
 Only text and media captions are preserved in the current version; media files
 themselves are not copied. Messages without text or a caption, including stickers,
-are deleted after a notice containing “Сообщение без текста или подписи” is sent.
+are deleted after a notice containing “сообщение без текста или подписи” is sent.
+This line is plain text, without a spoiler or a deleted-content heading.
 Their metadata is cached just like that of textual messages.
 If the original message was not observed by
 the running process, the bot logs `SKIP_DELETE` and leaves the original message
@@ -163,8 +164,8 @@ Use a new session for subsequent native Windows builds or tests.
 Copy `bin/bot-linux-amd64` to the Linux machine, then run from its directory:
 
 ```bash
-chmod +x ./bot-linux-amd64
-./bot-linux-amd64
+chmod +x ./vote-message-deleter
+./vote-message-deleter
 ```
 
 Before starting, configure the environment variables described above, including

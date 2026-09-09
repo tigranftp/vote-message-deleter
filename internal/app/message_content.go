@@ -47,9 +47,6 @@ func (store *messageContentStore) remember(message telegram.Message) {
 	if content == "" {
 		content = message.Caption
 	}
-	if strings.TrimSpace(content) == "" {
-		content = "Сообщение без текста или подписи"
-	}
 
 	store.mu.Lock()
 	defer store.mu.Unlock()
@@ -151,16 +148,19 @@ func deletionSpoilerMessage(
 	}
 	text.WriteString(fmt.Sprintf("Время оригинала: %s\n", formatOriginalMessageTime(originalDate)))
 	text.WriteByte('\n')
-	text.WriteString("Удалённое содержимое:\n")
-
-	spoilerOffset := utf16Length(text.String())
-	text.WriteString(content)
+	if strings.TrimSpace(content) == "" {
+		text.WriteString("сообщение без текста или подписи")
+	} else {
+		text.WriteString("Удалённое содержимое:\n")
+		spoilerOffset := utf16Length(text.String())
+		text.WriteString(content)
+		entities = append(entities, telegram.MessageEntity{
+			Type:   spoilerEntityType,
+			Offset: spoilerOffset,
+			Length: utf16Length(content),
+		})
+	}
 	text.WriteString("\n\n")
-	entities = append(entities, telegram.MessageEntity{
-		Type:   spoilerEntityType,
-		Offset: spoilerOffset,
-		Length: utf16Length(content),
-	})
 
 	text.WriteString(fmt.Sprintf("Отрицательных реакций: %d.\n", dislikes))
 	writeReferenceListLine(&text, &entities, "Дизлайкнули: ", dislikers)

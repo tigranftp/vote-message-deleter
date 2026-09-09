@@ -368,9 +368,11 @@ func TestHandlerDeletesMessagesWithoutText(t *testing.T) {
 					t.Fatalf("DeleteMessage() = %#v", got)
 				}
 				notice := actions.messages[0]
-				spoiler, ok := findEntity(notice.Entities, "spoiler", "")
-				if !ok || formattedEntityText(notice.Text, spoiler) != "Сообщение без текста или подписи" {
-					t.Fatalf("notice = %#v, want nonempty placeholder spoiler", notice)
+				if _, ok := findEntity(notice.Entities, "spoiler", ""); ok {
+					t.Fatalf("notice = %#v, want no spoiler", notice)
+				}
+				if strings.Contains(notice.Text, "Удалённое содержимое") || !strings.Contains(notice.Text, "\nсообщение без текста или подписи\n") {
+					t.Fatalf("notice = %#v, want plain placeholder without content heading", notice)
 				}
 			}
 		})
