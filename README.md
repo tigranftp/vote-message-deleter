@@ -146,6 +146,31 @@ non-anonymous reactions. The bot must be an administrator in the chat and must
 remain running while the reactions being counted are added, removed, or
 changed.
 
+## Build for Linux x86_64
+
+From the repository root in Windows PowerShell, run:
+
+```powershell
+$env:GOOS = "linux"
+$env:GOARCH = "amd64"
+$env:CGO_ENABLED = "0"
+go build -o ./bin/bot-linux-amd64 ./cmd/bot
+```
+
+These environment variables remain set for the current PowerShell session.
+Use a new session for subsequent native Windows builds or tests.
+
+Copy `bin/bot-linux-amd64` to the Linux machine, then run from its directory:
+
+```bash
+chmod +x ./bot-linux-amd64
+./bot-linux-amd64
+```
+
+Before starting, configure the environment variables described above, including
+`TELEGRAM_BOT_TOKEN`. Set `DRY_RUN=false` to enable actual deletion after testing.
+The bot does not load `.env` automatically.
+
 ## Development
 
 Run the standard checks from the repository root:
