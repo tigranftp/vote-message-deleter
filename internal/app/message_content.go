@@ -48,7 +48,7 @@ func (store *messageContentStore) remember(message telegram.Message) {
 		content = message.Caption
 	}
 	if strings.TrimSpace(content) == "" {
-		return
+		content = "Сообщение без текста или подписи"
 	}
 
 	store.mu.Lock()
@@ -138,7 +138,7 @@ func deletionSpoilerMessage(
 	var entities []telegram.MessageEntity
 
 	text.WriteString("🗑 Сообщение скрыто голосованием.\n\n")
-	//text.WriteString(fmt.Sprintf("ID оригинала: %d\n", messageID))
+	text.WriteString(fmt.Sprintf("ID оригинала: %d\n", messageID))
 	writeReferenceLine(&text, &entities, "Автор: ", author)
 	if forwarded != nil {
 		writeReferenceLine(&text, &entities, "Переслано от: ", *forwarded)

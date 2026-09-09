@@ -20,7 +20,7 @@ var (
 	// enabled without a configured message sender.
 	ErrMessageSenderRequired = errors.New("message sender is required")
 	// ErrOriginalMessageUnavailable indicates that the bot did not observe the
-	// original text or caption and therefore cannot safely preserve it.
+	// original message and therefore cannot publish its deletion notice.
 	ErrOriginalMessageUnavailable = errors.New("original message content is unavailable")
 )
 
@@ -84,7 +84,7 @@ func NewHandler(deleter MessageDeleter, thresholds moderation.Thresholds, option
 	return handler
 }
 
-// HandleUpdate remembers textual content from new messages and applies one
+// HandleUpdate remembers content and metadata from new messages and applies one
 // non-anonymous message_reaction update. Other update types are ignored.
 func (handler *Handler) HandleUpdate(ctx context.Context, update telegram.Update) (Result, error) {
 	if update.Message != nil {

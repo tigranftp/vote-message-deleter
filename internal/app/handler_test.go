@@ -2,6 +2,7 @@ package app_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
@@ -321,6 +322,58 @@ func TestHandlerPublishesSpoilerBeforeDeleting(t *testing.T) {
 	}
 	if !strings.Contains(message.Text, "Оригинал: https://t.me/public_news/321") {
 		t.Errorf("SendMessage() text = %q, want visible original link", message.Text)
+	}
+}
+
+func TestHandlerDeletesMessagesWithoutText(t *testing.T) {
+	for _, payload := range []string{
+		`"photo":[{"file_id":"photo","width":100,"height":100}]`,
+		`"sticker":{"file_id":"sticker","type":"regular","width":100,"height":100,"is_animated":false,"is_video":false}`,
+		`"video":{"file_id":"video","width":100,"height":100,"duration":1}`,
+		`"text":"  \n\t"`,
+	} {
+		t.Run(strings.SplitN(payload, ":", 2)[0], func(t *testing.T) {
+			for _, dryRun := range []bool{false, true} {
+				actions := &recordingModerationActions{}
+				handler := app.NewHandler(actions, moderation.Thresholds{Positive: 3, Negative: 2}, app.WithPreDeletionSpoiler(actions, dryRun))
+				var update telegram.Update
+				if err := json.Unmarshal([]byte(`{"update_id":1,"message":{"message_id":77,"chat":{"id":-100123},`+payload+`}}`), &update); err != nil {
+					t.Fatal(err)
+				}
+				if _, err := handler.HandleUpdate(context.Background(), update); err != nil {
+					t.Fatal(err)
+				}
+				for id := int64(2); id <= 3; id++ {
+					result, err := handler.HandleUpdate(context.Background(), reactionUpdate(id, -100123, 77, nil, []telegram.ReactionType{emojiReaction("👎")}))
+					if err != nil {
+						t.Fatal(err)
+					}
+					if id == 2 && (result.Decision != moderation.KeepMessage || len(actions.events) != 0) {
+						t.Fatalf("below threshold: result = %#v, actions = %v", result, actions.events)
+					}
+					if id == 3 && result.Decision != moderation.DeleteMessage {
+						t.Fatalf("threshold reached: result = %#v", result)
+					}
+				}
+				if dryRun {
+					if len(actions.events) != 0 {
+						t.Fatalf("dry-run actions = %v, want none", actions.events)
+					}
+					continue
+				}
+				if strings.Join(actions.events, ",") != "send,delete" {
+					t.Fatalf("actions = %v, want [send delete]", actions.events)
+				}
+				if got := actions.deleteCalls[0]; got != (deleteCall{chatID: -100123, messageID: 77}) {
+					t.Fatalf("DeleteMessage() = %#v", got)
+				}
+				notice := actions.messages[0]
+				spoiler, ok := findEntity(notice.Entities, "spoiler", "")
+				if !ok || formattedEntityText(notice.Text, spoiler) != "Сообщение без текста или подписи" {
+					t.Fatalf("notice = %#v, want nonempty placeholder spoiler", notice)
+				}
+			}
+		})
 	}
 }
 

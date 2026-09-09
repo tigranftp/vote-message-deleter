@@ -61,7 +61,10 @@ react and use a new message after startup. Existing reactions from before the
 process started cannot be reconstructed accurately.
 
 Only text and media captions are preserved in the current version; media files
-themselves are not copied. If the original text or caption was not observed by
+themselves are not copied. Messages without text or a caption, including stickers,
+are deleted after a notice containing “Сообщение без текста или подписи” is sent.
+Their metadata is cached just like that of textual messages.
+If the original message was not observed by
 the running process, the bot logs `SKIP_DELETE` and leaves the original message
 untouched. If spoiler publication fails, deletion is not attempted. If spoiler
 publication succeeds but deletion fails, the runner retries only the deletion
